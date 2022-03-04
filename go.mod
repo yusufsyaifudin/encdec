@@ -1,4 +1,4 @@
-module github.com/yusufsyaifudin/encdec
+module github.com/yusufsyaifudin/ende
 
 go 1.17
 

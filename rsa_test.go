@@ -1,11 +1,11 @@
-package encdec_test
+package ende_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yusufsyaifudin/encdec"
+	"github.com/yusufsyaifudin/ende"
 )
 
 const (
@@ -22,7 +22,7 @@ LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQ0NnS0NBZ0VBd1FLU28xd203TmIySVpXaEFzNFMw
 func TestNewRSAEncrypt_Decrypt(t *testing.T) {
 	plainText := "hello this will be encrypted and decrypted"
 
-	enc, err := encdec.NewRSAEncrypt(PublicKeyBase64)
+	enc, err := ende.NewRSAEncrypt(PublicKeyBase64)
 	assert.NotNil(t, enc)
 	assert.NoError(t, err)
 
@@ -30,7 +30,7 @@ func TestNewRSAEncrypt_Decrypt(t *testing.T) {
 	assert.NotEmpty(t, cipherText)
 	assert.NoError(t, err)
 
-	dec, err := encdec.NewRSADecrypt(PrivateKeyBase64)
+	dec, err := ende.NewRSADecrypt(PrivateKeyBase64)
 	assert.NotNil(t, dec)
 	assert.NoError(t, err)
 

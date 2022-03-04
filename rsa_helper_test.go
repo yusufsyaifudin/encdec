@@ -1,28 +1,28 @@
-package encdec_test
+package ende_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yusufsyaifudin/encdec"
+	"github.com/yusufsyaifudin/ende"
 )
 
 func TestGenerateRSAKeypair(t *testing.T) {
-	keyPair, err := encdec.GenerateRSAKeypair()
+	keyPair, err := ende.GenerateRSAKeypair()
 	assert.NotNil(t, keyPair)
 	assert.NoError(t, err)
 }
 
 func TestRSAKeyPairToBase64(t *testing.T) {
-	keyPair, err := encdec.GenerateRSAKeypair()
+	keyPair, err := ende.GenerateRSAKeypair()
 	assert.NotNil(t, keyPair)
 	assert.NoError(t, err)
 
-	privateKey, err := encdec.RSAPrivatePEMKeyToBase64(keyPair.Private)
+	privateKey, err := ende.RSAPrivatePEMKeyToBase64(keyPair.Private)
 	assert.NotEmpty(t, privateKey)
 	assert.NoError(t, err)
 
-	publicKey, err := encdec.RSAPublicKeyToBase64(keyPair.Public)
+	publicKey, err := ende.RSAPublicKeyToBase64(keyPair.Public)
 	assert.NotEmpty(t, publicKey)
 	assert.NoError(t, err)
 

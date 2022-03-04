@@ -1,4 +1,4 @@
-package encdec
+package ende
 
 import (
 	"context"

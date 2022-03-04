@@ -1,6 +1,10 @@
-# EncDec
+# ende
 
-**ENC**ryption **DEC**ryption is a helper package to easily interact with encryption and decryption method in Golang.
+> Ende Regency is a regency on the island of Flores, within East Nusa Tenggara Province of Indonesia.
+> 
+> Source: [Wikipedia](https://en.wikipedia.org/wiki/Ende_Regency)
+
+**EN**cryption **DE**cryption is a helper package to easily interact with encryption and decryption method in Golang.
 
 Golang's native library of cryptography is complete, but we need to simplify the process.
 For example, [RSA have limitation to encrypt long message](https://security.stackexchange.com/a/33445) 

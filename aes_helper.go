@@ -1,9 +1,11 @@
-package encdec
+package ende
 
 import (
 	"crypto/rand"
 	"fmt"
 )
+
+// --- Helper AES
 
 func GenerateAESKey() ([]byte, error) {
 	randGen := make([]byte, 32)
