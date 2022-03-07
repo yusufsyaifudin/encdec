@@ -30,4 +30,4 @@ and decode it before use it.
 
 Although Base32 representation takes roughly 20% more space than Base64, the resulting character set is all one case, and [some other advantages](https://en.wikipedia.org/wiki/Base32#Advantages).
 
-
+* [ ] TODO add capability to select the output encoding
