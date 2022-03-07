@@ -5,13 +5,13 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"io"
 )
 
 type AES struct {
-	AEAD cipher.AEAD
+	chiperAEAD cipher.AEAD
+	encoder    Encoder
 }
 
 var _ Encrypt = (*AES)(nil)
@@ -41,43 +41,40 @@ func NewAES(secretKey []byte) (*AES, error) {
 	}
 
 	instance := &AES{
-		AEAD: gcm,
+		chiperAEAD: gcm,
+		encoder:    NewBase32(),
 	}
 
 	return instance, nil
 }
 
 func (a *AES) Decrypt(ctx context.Context, ciphertext string) (string, error) {
-	var decrypt = func(g cipher.AEAD, ciphertext string) (plainText string, err2 error) {
-		ciphertextBytes, err2 := base64.RawURLEncoding.DecodeString(ciphertext)
-		if err2 != nil {
-			err2 = fmt.Errorf("cannot decode ciphertext from string: %w", err2)
-			return "", err2
-		}
-
-		nonceSize := g.NonceSize()
-		if len(ciphertextBytes) < nonceSize {
-			return "", fmt.Errorf("length of ciphertext (%d) less than nonce size (%d)",
-				len(ciphertextBytes), nonceSize,
-			)
-		}
-
-		nonce, ciphertextBytes := ciphertextBytes[:nonceSize], ciphertextBytes[nonceSize:]
-		plainTextBytes, err2 := g.Open(nil, nonce, ciphertextBytes, nil)
-		if err2 != nil {
-			return "", fmt.Errorf("error decrypt: %w", err2)
-		}
-
-		return string(plainTextBytes), nil
+	ciphertextBytes, err2 := a.encoder.DecodeString(ctx, ciphertext)
+	if err2 != nil {
+		err2 = fmt.Errorf("cannot decode ciphertext from string: %w", err2)
+		return "", err2
 	}
 
-	return decrypt(a.AEAD, ciphertext)
+	nonceSize := a.chiperAEAD.NonceSize()
+	if len(ciphertextBytes) < nonceSize {
+		return "", fmt.Errorf("length of ciphertext (%d) less than nonce size (%d)",
+			len(ciphertextBytes), nonceSize,
+		)
+	}
+
+	nonce, ciphertextBytes := ciphertextBytes[:nonceSize], ciphertextBytes[nonceSize:]
+	plainTextBytes, err2 := a.chiperAEAD.Open(nil, nonce, ciphertextBytes, nil)
+	if err2 != nil {
+		return "", fmt.Errorf("error decrypt: %w", err2)
+	}
+
+	return string(plainTextBytes), nil
 }
 
 func (a *AES) Encrypt(ctx context.Context, data string) (ciphertext string, err error) {
 	// creates a new byte array the size of the nonce
 	// which must be passed to Seal
-	nonce := make([]byte, a.AEAD.NonceSize())
+	nonce := make([]byte, a.chiperAEAD.NonceSize())
 
 	// populates our nonce with a cryptographically secure
 	// random sequence
@@ -87,6 +84,7 @@ func (a *AES) Encrypt(ctx context.Context, data string) (ciphertext string, err 
 		return "", err
 	}
 
-	ciphertext = base64.RawURLEncoding.EncodeToString(a.AEAD.Seal(nonce, nonce, []byte(data), nil))
+	sealed := a.chiperAEAD.Seal(nonce, nonce, []byte(data), nil)
+	ciphertext, err = a.encoder.EncodeToString(ctx, sealed)
 	return
 }

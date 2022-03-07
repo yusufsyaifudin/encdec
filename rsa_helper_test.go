@@ -13,16 +13,18 @@ func TestGenerateRSAKeypair(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestRSAKeyPairToBase64(t *testing.T) {
+func TestRSAKeyPairEncoded(t *testing.T) {
 	keyPair, err := ende.GenerateRSAKeypair()
 	assert.NotNil(t, keyPair)
 	assert.NoError(t, err)
 
-	privateKey, err := ende.RSAPrivatePEMKeyToBase64(keyPair.Private)
+	base32 := ende.NewBase32()
+
+	privateKey, err := ende.RSAPrivateEncode(base32, keyPair.Private)
 	assert.NotEmpty(t, privateKey)
 	assert.NoError(t, err)
 
-	publicKey, err := ende.RSAPublicKeyToBase64(keyPair.Public)
+	publicKey, err := ende.RSAPublicKeyEncode(base32, keyPair.Public)
 	assert.NotEmpty(t, publicKey)
 	assert.NoError(t, err)
 

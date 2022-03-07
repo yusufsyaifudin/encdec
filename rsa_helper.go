@@ -2,11 +2,11 @@ package ende
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/asn1"
-	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 )
@@ -32,7 +32,7 @@ func GenerateRSAKeypair() (*RSAKeyPair, error) {
 	}, nil
 }
 
-func RSAPrivatePEMKeyToBase64(key *rsa.PrivateKey) (string, error) {
+func RSAPrivateEncode(encoder Encoder, key *rsa.PrivateKey) (string, error) {
 	var privateKey = &pem.Block{
 		Type:  "PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
@@ -44,10 +44,10 @@ func RSAPrivatePEMKeyToBase64(key *rsa.PrivateKey) (string, error) {
 		return "", err
 	}
 
-	return base64.RawURLEncoding.EncodeToString(buffer.Bytes()), nil
+	return encoder.EncodeToString(context.Background(), buffer.Bytes())
 }
 
-func RSAPublicKeyToBase64(pubKey rsa.PublicKey) (string, error) {
+func RSAPublicKeyEncode(encoder Encoder, pubKey rsa.PublicKey) (string, error) {
 	asn1Bytes, err := asn1.Marshal(pubKey)
 	if err != nil {
 		return "", err
@@ -64,5 +64,5 @@ func RSAPublicKeyToBase64(pubKey rsa.PublicKey) (string, error) {
 		return "", err
 	}
 
-	return base64.RawURLEncoding.EncodeToString(buffer.Bytes()), nil
+	return encoder.EncodeToString(context.Background(), buffer.Bytes())
 }

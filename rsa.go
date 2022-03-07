@@ -6,7 +6,6 @@ import (
 	"crypto/rsa"
 	"crypto/sha512"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"strings"
@@ -16,19 +15,22 @@ import (
 
 type RSAEncrypt struct {
 	PublicKey *rsa.PublicKey
+	encoder   Encoder
 }
 
 var _ Encrypt = (*RSAEncrypt)(nil)
 
-func NewRSAEncrypt(publicKeyBase64 string) (*RSAEncrypt, error) {
-	publicKeyBase64 = strings.TrimSpace(publicKeyBase64)
-	if publicKeyBase64 == "" {
-		return nil, fmt.Errorf("public key is nil")
+func NewRSAEncrypt(publicKeyEncoded string) (*RSAEncrypt, error) {
+	encoder := NewBase32()
+
+	publicKeyEncoded = strings.TrimSpace(publicKeyEncoded)
+	if publicKeyEncoded == "" {
+		return nil, fmt.Errorf("public key is empty")
 	}
 
-	pubKey, err := base64.RawURLEncoding.DecodeString(publicKeyBase64)
+	pubKey, err := encoder.DecodeString(context.Background(), publicKeyEncoded)
 	if err != nil {
-		return nil, fmt.Errorf("cannot decode public key from base64: %w", err)
+		return nil, fmt.Errorf("cannot decode public key using %s: %w", encoder, err)
 	}
 
 	block, _ := pem.Decode(pubKey)
@@ -44,7 +46,10 @@ func NewRSAEncrypt(publicKeyBase64 string) (*RSAEncrypt, error) {
 		return nil, fmt.Errorf("x509.parse pki public key: %w", err)
 	}
 
-	return &RSAEncrypt{PublicKey: rsaPubKey}, nil
+	return &RSAEncrypt{
+		PublicKey: rsaPubKey,
+		encoder:   encoder,
+	}, nil
 }
 
 func (r *RSAEncrypt) Encrypt(ctx context.Context, data string) (string, error) {
@@ -75,7 +80,10 @@ func (r *RSAEncrypt) Encrypt(ctx context.Context, data string) (string, error) {
 		return "", fmt.Errorf("cannot encrypt using public key: %w", err)
 	}
 
-	symmetricKeyText := base64.RawURLEncoding.EncodeToString(symmetricKey)
+	symmetricKeyText, err := r.encoder.EncodeToString(ctx, symmetricKey)
+	if err != nil {
+		return "", fmt.Errorf("cannot encode to string: %w", err)
+	}
 
 	// ** Sends both of these ciphertexts to Alice.
 	out := fmt.Sprintf("%s.%s", symmetricKeyText, ciphertext)
@@ -86,19 +94,22 @@ func (r *RSAEncrypt) Encrypt(ctx context.Context, data string) (string, error) {
 
 type RSADecrypt struct {
 	PrivateKey *rsa.PrivateKey
+	encoder    Encoder
 }
 
 var _ Decrypt = (*RSADecrypt)(nil)
 
-func NewRSADecrypt(privateKeyBase64 string) (*RSADecrypt, error) {
-	privateKeyBase64 = strings.TrimSpace(privateKeyBase64)
-	if privateKeyBase64 == "" {
+func NewRSADecrypt(privateKeyEncoded string) (*RSADecrypt, error) {
+	encoder := NewBase32()
+
+	privateKeyEncoded = strings.TrimSpace(privateKeyEncoded)
+	if privateKeyEncoded == "" {
 		return nil, fmt.Errorf("private key is nil")
 	}
 
-	privateKey, err := base64.RawURLEncoding.DecodeString(privateKeyBase64)
+	privateKey, err := encoder.DecodeString(context.Background(), privateKeyEncoded)
 	if err != nil {
-		return nil, fmt.Errorf("cannot decode private key from base64: %w", err)
+		return nil, fmt.Errorf("cannot decode private key using %s: %w", encoder, err)
 	}
 
 	block, _ := pem.Decode(privateKey)
@@ -114,7 +125,10 @@ func NewRSADecrypt(privateKeyBase64 string) (*RSADecrypt, error) {
 		return nil, fmt.Errorf("x509.parse private key: %w", err)
 	}
 
-	return &RSADecrypt{PrivateKey: rsaPubKey}, nil
+	return &RSADecrypt{
+		PrivateKey: rsaPubKey,
+		encoder:    encoder,
+	}, nil
 }
 
 func (r *RSADecrypt) Decrypt(ctx context.Context, ciphertext string) (string, error) {
@@ -127,7 +141,7 @@ func (r *RSADecrypt) Decrypt(ctx context.Context, ciphertext string) (string, er
 	symmetricKey := str[0]
 	encryptedText := str[1]
 
-	symmetricKeyDecoded, err := base64.RawURLEncoding.DecodeString(symmetricKey)
+	symmetricKeyDecoded, err := r.encoder.DecodeString(ctx, symmetricKey)
 	if err != nil {
 		return "", fmt.Errorf("not valid base64 string: %w", err)
 	}

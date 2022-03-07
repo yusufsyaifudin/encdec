@@ -25,3 +25,9 @@ we may have difficulties to copy and paste this long multiline text into environ
 
 To make public and private key easier to copy and paste, we need make it into one line, so we do Base64 encoding when generate key 
 and decode it before use it.
+
+### Why using base32 instead of base64?
+
+Although Base32 representation takes roughly 20% more space than Base64, the resulting character set is all one case, and [some other advantages](https://en.wikipedia.org/wiki/Base32#Advantages).
+
+
